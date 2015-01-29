@@ -7,17 +7,8 @@ RenderThread::RenderThread(QObject * o)
       stop_     (false),
       restart_  (false)
 {
-    w_ = 256;
-    h_ = 256;
-    buf_.resize(w_ * h_);
-
-    set_.numIters = 32;
-    set_.param = vec3(.4, .5, 1.5);
-    set_.pos = vec3(0, 0, 0);
-    set_.scale = 0.03;
-
-    set_.volumeTrace = false;
-    set_.volumeStep = 0.001;
+    kset_ = kali_.defaultKaliSettings();
+    rset_ = kali_.defaultRenderSettings();
 }
 
 /*RenderThread::~RenderThread()
@@ -37,13 +28,19 @@ void RenderThread::stop()
 
 void RenderThread::getImage(QImage &img)
 {
-    assert(img.format() == QImage::Format_RGB32
-           && img.width() == w_
-           && img.height() == h_);
+    if (img.width() != rset_.width
+        || img.height() != rset_.height
+        || img.format() != QImage::Format_RGB32)
+        img = QImage(rset_.width, rset_.height, QImage::Format_RGB32);
 
-    for (int j = 0; j < h_; ++j)
-    for (int i = 0; i < w_; ++i)
-        img.setPixel(i, j, KaliSet::toColor(buf_[j*w_+i]));
+    const int s = rset_.height * rset_.height;
+
+    for (uint i = 0; i < buf_.size(); ++i)
+        *reinterpret_cast<QRgb*>(&img.bits()[i<<2]) = KaliSet::toColor(buf_[i]);
+
+    // fill rest
+    for (int i = buf_.size(); i < s; ++i)
+        *reinterpret_cast<QRgb*>(&img.bits()[i<<2]) = 0xff000000;
 }
 
 
@@ -51,43 +48,27 @@ void RenderThread::run()
 {
     stop_ = false;
 
-again_:
-    restart_ = false;
-    kali_.setIters(set_.numIters);
-    kali_.setParam(set_.param);
-
-    if (!set_.volumeTrace)
+    do
     {
-        for (int j = 0; j < h_; ++j)
-        for (int i = 0; i < w_; ++i)
+        restart_ = false;
+        // update settings of runtime object
+        kali_.setKaliSettings(kset_);
+        kali_.setRenderSettings(rset_);
+        // above part should probably be locked
+        // from now on, only use settings in kali_
+
+        buf_.resize(kali_.renderSettings().width * kali_.renderSettings().height);
+
+        vec3 * buf = &buf_[0];
+        for (int j = 0; j < kali_.renderSettings().height; ++j)
+        for (int i = 0; i < kali_.renderSettings().width; ++i)
         {
             if (stop_ || restart_)
                 break;
 
-            Float x = Float(i) / w_ * set_.scale,
-                  y = Float(j) / h_ * set_.scale;
-
-            buf_[j*w_ + i] = kali_.value3(vec3(x, y, 0.) + set_.pos);
+            *buf++ = kali_.color(i, j);
         }
+
     }
-    else
-    {
-        for (int j = 0; j < h_; ++j)
-        for (int i = 0; i < w_; ++i)
-        {
-            if (stop_ || restart_)
-                break;
-
-            Float x = Float(i) / w_ * set_.scale,
-                  y = Float(j) / h_ * set_.scale;
-
-            vec3 dir = vec3(x-.5, y-.5, 1.);
-            dir.normalize();
-
-            buf_[j*w_ + i] = kali_.trace3(set_.pos, dir, set_.volumeStep);
-        }
-    }
-
-    if (restart_)
-        goto again_;
+    while (restart_);
 }

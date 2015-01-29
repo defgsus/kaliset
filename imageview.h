@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QPixmap>
 
+/** Just a wrapper around a QLabel to display an image
+    and to get mouse input. */
 class ImageView : public QWidget
 {
     Q_OBJECT

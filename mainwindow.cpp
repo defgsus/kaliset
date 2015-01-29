@@ -4,13 +4,17 @@
 
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow   (parent),
+    : QMainWindow   (parent)
+#if 0
       img2_         (256, 256, QImage::Format_RGB32),
       img2s_        (256, 256, QImage::Format_RGB32),
       img3_         (256, 256, QImage::Format_RGB32),
       ignorePosChanged_(false)
+#endif
 {
+    setWindowTitle(tr("KaliSet Explorer"));
     createWidgets_();
+#if 0
 
     auto s = thread3_.settings();
     s.volumeTrace = true;
@@ -26,15 +30,15 @@ MainWindow::MainWindow(QWidget *parent)
     timer_.setInterval(500);
 
     updateBase();
+#endif
 }
 
 MainWindow::~MainWindow()
 {
-    timer_.stop();
-    thread3_.stop();
-    thread2_.stop();
+    //timer_.stop();
+    //thread3_.stop();
+    //thread2_.stop();
 }
-
 
 
 void MainWindow::createWidgets_()
@@ -44,182 +48,45 @@ void MainWindow::createWidgets_()
 
     auto lh = new QHBoxLayout(w);
 
-        auto lv = new QVBoxLayout();
-        lh->addLayout(lv);
+        // create some viewer
+        for (int i=0; i<3; ++i)
+        {
+            auto lv = new QVBoxLayout();
+            lh->addLayout(lv);
 
-            view2_ = new ImageView(w);
-            lv->addWidget(view2_);
-            connect(view2_, SIGNAL(clicked(double,double)),
-                    this, SLOT(onClicked2_(double,double)));
-
-            sbIter_ = new QSpinBox(w);
-            sbIter_->setRange(2, 10000);
-            sbIter_->setValue(kali_.iters());
-            lv->addWidget(sbIter_);
-            connect(sbIter_, SIGNAL(valueChanged(int)),
-                    this, SLOT(onParamChanged_()));
-
-            sbPX_ = new QDoubleSpinBox(w);
-            sbPX_->setRange(-10000, 10000);
-            sbPX_->setDecimals(5);
-            sbPX_->setSingleStep(0.01);
-            sbPX_->setValue(kali_.param().x());
-            lv->addWidget(sbPX_);
-            connect(sbPX_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onParamChanged_()));
-
-            sbPY_ = new QDoubleSpinBox(w);
-            sbPY_->setRange(-10000, 10000);
-            sbPY_->setDecimals(5);
-            sbPY_->setSingleStep(0.01);
-            sbPY_->setValue(kali_.param().y());
-            lv->addWidget(sbPY_);
-            connect(sbPY_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onParamChanged_()));
-
-            sbPZ_ = new QDoubleSpinBox(w);
-            sbPZ_->setRange(-10000, 10000);
-            sbPZ_->setDecimals(5);
-            sbPZ_->setSingleStep(0.01);
-            sbPZ_->setValue(kali_.param().z());
-            lv->addWidget(sbPZ_);
-            connect(sbPZ_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onParamChanged_()));
+            auto kview = new KaliView(i == 0, true, this);
+            kview->setObjectName(QString("_KaliView%1").arg(i+1));
+            lv->addWidget(kview);
 
             lv->addStretch(1);
 
-        lv = new QVBoxLayout();
-        lh->addLayout(lv);
+            kview->startRender();
 
-            view2s_ = new ImageView(w);
-            lv->addWidget(view2s_);
-
-            sbX_ = new QDoubleSpinBox(w);
-            sbX_->setRange(-10000, 10000);
-            sbX_->setDecimals(5);
-            sbX_->setSingleStep(0.01);
-            lv->addWidget(sbX_);
-            connect(sbX_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onPosChanged_()));
-
-            sbY_ = new QDoubleSpinBox(w);
-            sbY_->setRange(-10000, 10000);
-            sbY_->setDecimals(5);
-            sbY_->setSingleStep(0.01);
-            lv->addWidget(sbY_);
-            connect(sbY_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onPosChanged_()));
-
-            sbZ_ = new QDoubleSpinBox(w);
-            sbZ_->setRange(-10000, 10000);
-            sbZ_->setDecimals(5);
-            sbZ_->setSingleStep(0.01);
-            lv->addWidget(sbZ_);
-            connect(sbZ_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onPosChanged_()));
-
-            lv->addStretch(1);
-
-        lv = new QVBoxLayout();
-        lh->addLayout(lv);
-
-            view3_ = new ImageView(w);
-            lv->addWidget(view3_);
-
-            sbStep_ = new QDoubleSpinBox(w);
-            sbStep_->setRange(0.000001, 1000);
-            sbStep_->setDecimals(7);
-            sbStep_->setSingleStep(0.01);
-            sbStep_->setValue(0.01);
-            lv->addWidget(sbStep_);
-            connect(sbStep_, SIGNAL(valueChanged(double)),
-                    this, SLOT(onParamChanged_()));
-
-            lv->addStretch(1);
-
-}
-
-void MainWindow::onClicked2_(double x, double y)
-{
-    pos_ = vec3(x, y, 0.);
-
-    ignorePosChanged_ = true;
-    sbX_->setValue(pos_.x());
-    sbY_->setValue(pos_.y());
-    sbZ_->setValue(pos_.z());
-    ignorePosChanged_ = false;
-
-    updateAll();
-}
-
-void MainWindow::onPosChanged_()
-{
-    if (ignorePosChanged_)
-        return;
-
-    pos_ = vec3(sbX_->value(), sbY_->value(), sbZ_->value());
-
-    updateAll();
-}
-
-void MainWindow::onParamChanged_()
-{
-    kali_.setIters(sbIter_->value());
-    kali_.setParam(KaliSet::vec3(sbPX_->value(), sbPY_->value(), sbPZ_->value()));
-
-    updateBase();
-    updateAll();
-}
-
-void MainWindow::onThread2Finished_()
-{
-    thread2_.getImage(img2s_);
-    view2s_->setImage(img2s_);
-}
-
-void MainWindow::onThread3Finished_()
-{
-    timer_.stop();
-    thread3_.getImage(img3_);
-    view3_->setImage(img3_);
-}
-
-void MainWindow::onTimer_()
-{
-    thread3_.getImage(img3_);
-    view3_->setImage(img3_);
-}
-
-void MainWindow::updateBase()
-{
-    kali_.plotImage3(img2_, vec3(0., 0., 0.), 1.);
-    view2_->setImage(img2_);
-}
+            kviews_.push_back(kview);
+        }
 
 
-void MainWindow::updateAll()
-{
-    startThread_(thread2_);
-    startThread_(thread3_);
-    timer_.start();
-}
+        // propagate 1st kali settings to other views
+        connect(kviews_[0], &KaliView::kaliSettingsChanged, [=]()
+        {
+            auto kset = kviews_[0]->kaliSettings();
 
+            for (uint i=1; i<kviews_.size(); ++i)
+                kviews_[i]->setKaliSettings(kset);
+        });
 
-void MainWindow::getSettings_(RenderThread::Settings& set)
-{
-    set.numIters = sbIter_->value();
-    set.param = KaliSet::vec3(sbPX_->value(), sbPY_->value(), sbPZ_->value());
-    set.pos = KaliSet::vec3(sbX_->value(), sbY_->value(), sbZ_->value());
-    set.volumeStep = sbStep_->value();
-}
-
-void MainWindow::startThread_(RenderThread& t)
-{
-    RenderThread::Settings set = t.settings();
-    getSettings_(set);
-    t.setSettings(set);
-
-    if (!t.isRunning())
-        t.start();
+        // send click/drag position to either next views
+        for (uint j=0; j<kviews_.size() - 1; ++j)
+        {
+            connect(kviews_[j], &KaliView::viewClicked, [=](double x, double y)
+            {
+                for (uint i=j+1; i<kviews_.size(); ++i)
+                {
+                    auto kset = kviews_[i]->kaliSettings();
+                    kset.pos = KaliSet::vec3(x, y, kset.pos.z());
+                    kviews_[i]->setKaliSettings(kset);
+                }
+            });
+        }
 }
 

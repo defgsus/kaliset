@@ -35,16 +35,16 @@ void ImageView::createWidgets_()
 void ImageView::mousePressEvent(QMouseEvent * e)
 {
     if (e->buttons() & Qt::LeftButton)
-        emit clicked(double(e->x()) / width(),
-                     double(e->y()) / height());
+        emit clicked(double(e->x()) / width() * 2. - 1.,
+                     double(height() - 1 - e->y()) / height() * 2. - 1.);
     QWidget::mousePressEvent(e);
 }
 
 void ImageView::mouseMoveEvent(QMouseEvent * e)
 {
     if (e->buttons() & Qt::LeftButton)
-        emit clicked(double(e->x()) / width(),
-                     double(e->y()) / height());
+        emit clicked(double(e->x()) / width() * 2. - 1.,
+                     double(height() - 1 - e->y()) / height() * 2. - 1.);
     QWidget::mouseMoveEvent(e);
 }
 

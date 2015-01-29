@@ -17,17 +17,6 @@ public:
     typedef KaliSet::Float Float;
     typedef KaliSet::vec3 vec3;
 
-    struct Settings
-    {
-        uint numIters;
-        vec3 param;
-        vec3 pos;
-        Float scale;
-
-        bool volumeTrace;
-        Float volumeStep;
-    };
-
     // ------------- ctor ---------------
 
     explicit RenderThread(QObject *parent = 0);
@@ -36,29 +25,34 @@ public:
 
     void run() Q_DECL_OVERRIDE;
 
-    /** Quit the thread - blocking */
+    /** Quit the thread - block till end */
     void stop();
 
     // ------------- getter -------------
 
-    const Settings& settings() const { return set_; }
+    const KaliSet::KaliSettings& kaliSettings() const { return kset_; }
+    const KaliSet::RenderSettings& renderSettings() const { return rset_; }
 
-    /** Received current image data */
+    /** Receive current image data.
+        Not thread-locked, some pixels might by crap */
     void getImage(QImage& img);
 
     // ------------- setter -------------
 
-    void setSettings(const Settings& s) { set_ = s; restart_ = true; }
+    // The setters que a restart of the rendering when it's currently running
+
+    void setKaliSettings(const KaliSet::KaliSettings& s) { kset_ = s; restart_ = true; }
+    void setRenderSettings(const KaliSet::RenderSettings& s) { rset_ = s; restart_ = true; }
 
 private:
 
     KaliSet kali_;
     std::vector<vec3> buf_;
-    int w_, h_;
 
-    Settings set_;
+    KaliSet::KaliSettings kset_;
+    KaliSet::RenderSettings rset_;
 
-    volatile bool stop_, restart_, running_;
+    volatile bool stop_, restart_;
 };
 
 #endif // RENDERTHREAD_H
