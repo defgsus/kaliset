@@ -46,6 +46,7 @@ KaliSet::RenderSettings KaliSet::defaultRenderSettings() const
     s.volumeStep = 0.1;
     s.volumeMin = 0.001;
     s.volumeMax = 0.01;
+    s.bright = 1.;
     return s;
 }
 
@@ -97,7 +98,7 @@ KaliSet::vec3 KaliSet::trace3(const vec3 &ro, const vec3 &rd, Float stepSize) co
 
         t += std::max(Float(rset_.volumeMin), std::min(Float(rset_.volumeMax), d )) * stepSize;
 
-        col += k / (Float(1) + Float(100) * d * d);
+        col += k / (Float(1) + Float(rset_.bright * 100.) * d * d);
     }
 
     return col / 10.;
@@ -108,14 +109,16 @@ KaliSet::vec3 KaliSet::color(int i, int j) const
     Float y = Float(rset_.height - 1 - j) / rset_.height * Float(2) - Float(1),
           x = Float(i) / rset_.width * Float(2) - Float(1);
 
+    vec3 pos = kset_.pos + vec3(x * rset_.scale.x(), y * rset_.scale.y(), 0.);
+
     switch (rset_.mode)
     {
         default:
         case RM_PLOT_2D:
-            return value3( kset_.pos + vec3(x * rset_.scale.x(), y * rset_.scale.y(), 0.));
+            return value3( pos );
 
         case RM_VOLUME:
-            return trace3(kset_.pos, getRayDir(x, y), rset_.volumeStep);
+            return trace3( pos, getRayDir(x, y), rset_.volumeStep);
     }
 }
 
@@ -148,6 +151,7 @@ void KaliSet::plotImage(QImage &img, int ox, int oy, int w, int h)
         }
     }
 }
+
 
 
 #if 0

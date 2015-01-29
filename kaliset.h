@@ -37,7 +37,8 @@ public:
         int width, height;
         vec2 scale;
         RenderMode mode;
-        Float volumeStep, volumeMin, volumeMax;
+        Float volumeStep, volumeMin, volumeMax,
+            bright;
     };
 
     // ------ vector helper -----

@@ -68,8 +68,15 @@ void MainWindow::createWidgets_()
             kviews_.push_back(kview);
         }
 
+        // prepare different views
+        auto rset = kviews_[1]->renderSettings();
+        rset.scale = KaliSet::vec2(0.1, 0.1);
+        kviews_[1]->setRenderSettings(rset);
+        rset.scale = KaliSet::vec2(0, 0);;
+        rset.mode = KaliSet::RM_VOLUME;
+        kviews_[2]->setRenderSettings(rset);
 
-        // propagate 1st kali settings to other views
+        // propagate change of 1st kali settings to other views
         connect(kviews_[0], &KaliView::kaliSettingsChanged, [=]()
         {
             auto kset = kviews_[0]->kaliSettings();

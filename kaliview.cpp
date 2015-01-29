@@ -43,6 +43,8 @@ void KaliView::createWidgets_()
         lv->addWidget(imageView_);
         connect(imageView_, SIGNAL(clicked(double,double)), this, SLOT(onViewClicked_(double,double)));
 
+        labelInfo_ = new QLabel(this);
+        lv->addWidget(labelInfo_);
 
         layoutSet_ = lv;
 
@@ -99,7 +101,15 @@ void KaliView::updateWidgets_()
         cbMode_->setCurrentText(KaliSet::RenderModeName[rset.mode]);
     }
 
+    updateInfo_();
+
     ignoreWidgets_ = false;
+}
+
+void KaliView::updateInfo_()
+{
+    KaliSet::KaliSettings s = render_->kaliSettings();
+    labelInfo_->setText(QString("pos %1 %2 %3").arg(s.pos.x()).arg(s.pos.y()).arg(s.pos.z()));
 }
 
 QDoubleSpinBox * KaliView::createDoubleSpinBox_(const QString &name, double val, double range_min, double range_max, double step, bool is_kali)
@@ -161,6 +171,8 @@ void KaliView::onKaliChange_()
     KaliSet::KaliSettings s = render_->kaliSettings();
     s.param = KaliSet::vec3(sbParamX_->value(), sbParamY_->value(), sbParamZ_->value());
     s.pos = KaliSet::vec3(sbX_->value(), sbY_->value(), sbZ_->value());
+
+    updateInfo_();
 
     render_->setKaliSettings(s);
     startRender();

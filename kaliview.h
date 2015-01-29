@@ -70,6 +70,7 @@ private:
 
     void createWidgets_();
     void updateWidgets_();
+    void updateInfo_();
 
     QDoubleSpinBox * createDoubleSpinBox_(const QString& name, double val, double range_min, double range_max, double step, bool is_kaliset = false);
 
@@ -80,6 +81,7 @@ private:
     bool doKali_, doRender_, ignoreWidgets_;
     QImage img_;
     QVBoxLayout * layoutSet_;
+    QLabel * labelInfo_;
     QDoubleSpinBox *sbParamX_, *sbParamY_, *sbParamZ_,
                    *sbX_, *sbY_, *sbZ_, *sbScale_,
                     *sbStep_, *sbStepMin_, *sbStepMax_;
