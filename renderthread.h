@@ -23,6 +23,9 @@ public:
         vec3 param;
         vec3 pos;
         Float scale;
+
+        bool volumeTrace;
+        Float volumeStep;
     };
 
     // ------------- ctor ---------------

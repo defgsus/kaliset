@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QTimer>
 
 #include "renderthread.h"
 #include "imageview.h"
@@ -37,6 +38,8 @@ private slots:
     void onPosChanged_();
     void onParamChanged_();
     void onThread2Finished_();
+    void onThread3Finished_();
+    void onTimer_();
 
 private:
 
@@ -47,18 +50,20 @@ private:
     void startThread_(RenderThread& t);
 
     RenderThread thread2_, thread3_;
+    QTimer timer_;
     KaliSet kali_;
     vec3 pos_;
 
-    QImage img2_, img2s_;
+    QImage img2_, img2s_, img3_;
 
-    ImageView * view2_, * view2s_;
+    ImageView * view2_, * view2s_, * view3_;
 
     bool ignorePosChanged_;
     QSpinBox * sbIter_;
     QDoubleSpinBox
         * sbPX_, * sbPY_, * sbPZ_,
-        * sbX_, * sbY_, * sbZ_;
+        * sbX_, * sbY_, * sbZ_,
+        * sbStep_;
 };
 
 #endif // MAINWINDOW_H

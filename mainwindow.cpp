@@ -7,18 +7,31 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow   (parent),
       img2_         (256, 256, QImage::Format_RGB32),
       img2s_        (256, 256, QImage::Format_RGB32),
+      img3_         (256, 256, QImage::Format_RGB32),
       ignorePosChanged_(false)
 {
     createWidgets_();
 
+    auto s = thread3_.settings();
+    s.volumeTrace = true;
+    s.volumeStep = 0.01;
+    thread3_.setSettings(s);
+
     connect(&thread2_, SIGNAL(finished()),
             this, SLOT(onThread2Finished_()));
+    connect(&thread3_, SIGNAL(finished()),
+            this, SLOT(onThread3Finished_()));
+    connect(&timer_, SIGNAL(timeout()),
+            this, SLOT(onTimer_()));
+    timer_.setInterval(500);
 
     updateBase();
 }
 
 MainWindow::~MainWindow()
 {
+    timer_.stop();
+    thread3_.stop();
     thread2_.stop();
 }
 
@@ -107,6 +120,23 @@ void MainWindow::createWidgets_()
 
             lv->addStretch(1);
 
+        lv = new QVBoxLayout();
+        lh->addLayout(lv);
+
+            view3_ = new ImageView(w);
+            lv->addWidget(view3_);
+
+            sbStep_ = new QDoubleSpinBox(w);
+            sbStep_->setRange(0.000001, 1000);
+            sbStep_->setDecimals(7);
+            sbStep_->setSingleStep(0.01);
+            sbStep_->setValue(0.01);
+            lv->addWidget(sbStep_);
+            connect(sbStep_, SIGNAL(valueChanged(double)),
+                    this, SLOT(onParamChanged_()));
+
+            lv->addStretch(1);
+
 }
 
 void MainWindow::onClicked2_(double x, double y)
@@ -147,6 +177,19 @@ void MainWindow::onThread2Finished_()
     view2s_->setImage(img2s_);
 }
 
+void MainWindow::onThread3Finished_()
+{
+    timer_.stop();
+    thread3_.getImage(img3_);
+    view3_->setImage(img3_);
+}
+
+void MainWindow::onTimer_()
+{
+    thread3_.getImage(img3_);
+    view3_->setImage(img3_);
+}
+
 void MainWindow::updateBase()
 {
     kali_.plotImage3(img2_, vec3(0., 0., 0.), 1.);
@@ -157,6 +200,8 @@ void MainWindow::updateBase()
 void MainWindow::updateAll()
 {
     startThread_(thread2_);
+    startThread_(thread3_);
+    timer_.start();
 }
 
 
@@ -165,6 +210,7 @@ void MainWindow::getSettings_(RenderThread::Settings& set)
     set.numIters = sbIter_->value();
     set.param = KaliSet::vec3(sbPX_->value(), sbPY_->value(), sbPZ_->value());
     set.pos = KaliSet::vec3(sbX_->value(), sbY_->value(), sbZ_->value());
+    set.volumeStep = sbStep_->value();
 }
 
 void MainWindow::startThread_(RenderThread& t)

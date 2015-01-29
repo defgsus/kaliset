@@ -15,6 +15,9 @@ RenderThread::RenderThread(QObject * o)
     set_.param = vec3(.4, .5, 1.5);
     set_.pos = vec3(0, 0, 0);
     set_.scale = 0.03;
+
+    set_.volumeTrace = false;
+    set_.volumeStep = 0.001;
 }
 
 /*RenderThread::~RenderThread()
@@ -53,16 +56,36 @@ again_:
     kali_.setIters(set_.numIters);
     kali_.setParam(set_.param);
 
-    for (int j = 0; j < h_; ++j)
-    for (int i = 0; i < w_; ++i)
+    if (!set_.volumeTrace)
     {
-        if (stop_ || restart_)
-            break;
+        for (int j = 0; j < h_; ++j)
+        for (int i = 0; i < w_; ++i)
+        {
+            if (stop_ || restart_)
+                break;
 
-        Float x = Float(i) / w_ * set_.scale,
-              y = Float(j) / h_ * set_.scale;
+            Float x = Float(i) / w_ * set_.scale,
+                  y = Float(j) / h_ * set_.scale;
 
-        buf_[j*w_ + i] = kali_.value3(vec3(x, y, 0.) + set_.pos);
+            buf_[j*w_ + i] = kali_.value3(vec3(x, y, 0.) + set_.pos);
+        }
+    }
+    else
+    {
+        for (int j = 0; j < h_; ++j)
+        for (int i = 0; i < w_; ++i)
+        {
+            if (stop_ || restart_)
+                break;
+
+            Float x = Float(i) / w_ * set_.scale,
+                  y = Float(j) / h_ * set_.scale;
+
+            vec3 dir = vec3(x-.5, y-.5, 1.);
+            dir.normalize();
+
+            buf_[j*w_ + i] = kali_.trace3(set_.pos, dir, set_.volumeStep);
+        }
     }
 
     if (restart_)

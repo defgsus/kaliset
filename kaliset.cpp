@@ -39,6 +39,26 @@ KaliSet::vec3 KaliSet::value3_av(const vec3 &pos) const
     return av / iters_;
 }
 
+KaliSet::vec3 KaliSet::trace3(const vec3 &ro, const vec3 &rd, Float stepSize) const
+{
+    vec3 col = vec3(0,0,0);
+    Float t = 0.0;
+    for (int i=0; i<60; ++i)
+    {
+        vec3 p = ro + rd * t;
+
+        vec3 k = value3(p);
+
+        Float d = dot(k, k);
+        d = Float(1) - std::abs(Float(1) - d);
+
+        t += std::max(Float(0.0001), std::min(Float(0.01), d )) * stepSize;
+
+        col += k / (Float(1) + Float(100) * d * d);
+    }
+
+    return col / 10.;
+}
 
 void KaliSet::plotImage3(QImage &img, const vec3 &pos, const Float scale)
 {
