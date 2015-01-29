@@ -26,19 +26,27 @@ public:
 
 public slots:
 
-    void calc2();
-    void calc2s();
+    /** Rerenders the base (first) view */
+    void updateBase();
+    /** Starts threads for all other views */
+    void updateAll();
 
 private slots:
 
     void onClicked2_(double x, double y);
     void onPosChanged_();
     void onParamChanged_();
+    void onThread2Finished_();
 
 private:
 
     void createWidgets_();
 
+    /** Overwrite the settings in @p set with current widget values */
+    void getSettings_(RenderThread::Settings& set);
+    void startThread_(RenderThread& t);
+
+    RenderThread thread2_, thread3_;
     KaliSet kali_;
     vec3 pos_;
 

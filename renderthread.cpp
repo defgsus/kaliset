@@ -10,6 +10,11 @@ RenderThread::RenderThread(QObject * o)
     w_ = 256;
     h_ = 256;
     buf_.resize(w_ * h_);
+
+    set_.numIters = 32;
+    set_.param = vec3(.4, .5, 1.5);
+    set_.pos = vec3(0, 0, 0);
+    set_.scale = 0.03;
 }
 
 /*RenderThread::~RenderThread()
@@ -19,6 +24,9 @@ RenderThread::RenderThread(QObject * o)
 
 void RenderThread::stop()
 {
+    if (!isRunning() || stop_)
+        return;
+
     stop_ = true;
     wait();
 }
@@ -40,27 +48,23 @@ void RenderThread::run()
 {
     stop_ = false;
 
-    while (!stop_)
-    {
 again_:
-        restart_ = false;
-        kali_.setIters(iters_);
-        kali_.setParam(param_);
+    restart_ = false;
+    kali_.setIters(set_.numIters);
+    kali_.setParam(set_.param);
 
-        for (int j = 0; j < h_; ++j)
-        for (int i = 0; i < w_; ++i)
-        {
-            if (stop_ || restart_)
-                break;
+    for (int j = 0; j < h_; ++j)
+    for (int i = 0; i < w_; ++i)
+    {
+        if (stop_ || restart_)
+            break;
 
-            Float x = Float(i) / w_,
-                  y = Float(y) / h_;
+        Float x = Float(i) / w_ * set_.scale,
+              y = Float(j) / h_ * set_.scale;
 
-            buf_[j*w_ + i] = kali_.value3(vec3(x, y, 0.));
-        }
-
-
-        if (restart_)
-            goto again_;
+        buf_[j*w_ + i] = kali_.value3(vec3(x, y, 0.) + set_.pos);
     }
+
+    if (restart_)
+        goto again_;
 }

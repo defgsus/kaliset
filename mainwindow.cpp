@@ -1,4 +1,7 @@
+#include <QDebug>
+
 #include "mainwindow.h"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow   (parent),
@@ -8,13 +11,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     createWidgets_();
 
-    calc2();
-    calc2s();
+    connect(&thread2_, SIGNAL(finished()),
+            this, SLOT(onThread2Finished_()));
+
+    updateBase();
 }
 
 MainWindow::~MainWindow()
 {
-
+    thread2_.stop();
 }
 
 
@@ -114,7 +119,7 @@ void MainWindow::onClicked2_(double x, double y)
     sbZ_->setValue(pos_.z());
     ignorePosChanged_ = false;
 
-    calc2s();
+    updateAll();
 }
 
 void MainWindow::onPosChanged_()
@@ -124,26 +129,51 @@ void MainWindow::onPosChanged_()
 
     pos_ = vec3(sbX_->value(), sbY_->value(), sbZ_->value());
 
-    calc2s();
+    updateAll();
 }
 
 void MainWindow::onParamChanged_()
 {
     kali_.setIters(sbIter_->value());
     kali_.setParam(KaliSet::vec3(sbPX_->value(), sbPY_->value(), sbPZ_->value()));
-    calc2();
-    calc2s();
+
+    updateBase();
+    updateAll();
 }
 
-void MainWindow::calc2()
+void MainWindow::onThread2Finished_()
+{
+    thread2_.getImage(img2s_);
+    view2s_->setImage(img2s_);
+}
+
+void MainWindow::updateBase()
 {
     kali_.plotImage3(img2_, vec3(0., 0., 0.), 1.);
     view2_->setImage(img2_);
 }
 
-void MainWindow::calc2s()
+
+void MainWindow::updateAll()
 {
-    kali_.plotImage3(img2s_, pos_, 0.04);
-    view2s_->setImage(img2s_);
+    startThread_(thread2_);
+}
+
+
+void MainWindow::getSettings_(RenderThread::Settings& set)
+{
+    set.numIters = sbIter_->value();
+    set.param = KaliSet::vec3(sbPX_->value(), sbPY_->value(), sbPZ_->value());
+    set.pos = KaliSet::vec3(sbX_->value(), sbY_->value(), sbZ_->value());
+}
+
+void MainWindow::startThread_(RenderThread& t)
+{
+    RenderThread::Settings set = t.settings();
+    getSettings_(set);
+    t.setSettings(set);
+
+    if (!t.isRunning())
+        t.start();
 }
 

@@ -12,10 +12,24 @@ class RenderThread : public QThread
 {
 public:
 
+    // ----------- types ----------------
+
     typedef KaliSet::Float Float;
     typedef KaliSet::vec3 vec3;
 
+    struct Settings
+    {
+        uint numIters;
+        vec3 param;
+        vec3 pos;
+        Float scale;
+    };
+
+    // ------------- ctor ---------------
+
     explicit RenderThread(QObject *parent = 0);
+
+    // -------- thread interface --------
 
     void run() Q_DECL_OVERRIDE;
 
@@ -24,13 +38,14 @@ public:
 
     // ------------- getter -------------
 
+    const Settings& settings() const { return set_; }
+
     /** Received current image data */
     void getImage(QImage& img);
 
     // ------------- setter -------------
 
-    void setIters(uint iters) { iters_ = iters; restart_ = true; }
-    void setParam(const vec3& p) { param_ = p; restart_ = true; }
+    void setSettings(const Settings& s) { set_ = s; restart_ = true; }
 
 private:
 
@@ -38,10 +53,9 @@ private:
     std::vector<vec3> buf_;
     int w_, h_;
 
-    uint iters_;
-    vec3 pos_, param_;
+    Settings set_;
 
-    volatile bool stop_, restart_;
+    volatile bool stop_, restart_, running_;
 };
 
 #endif // RENDERTHREAD_H
