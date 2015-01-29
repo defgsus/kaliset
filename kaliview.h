@@ -19,7 +19,7 @@
 #include <QTimer>
 #include <QComboBox>
 
-#include "renderthread.h"
+#include "renderpool.h"
 #include "imageview.h"
 
 /** A complete renderer/display with all settings */
@@ -30,7 +30,7 @@ public:
 
     // ------------- ctor ---------------
 
-    explicit KaliView(bool createKaliControls, bool createRenderControls, QWidget *parent = 0);
+    explicit KaliView(bool createKaliControls, bool createRenderControls, uint numThreads, QWidget *parent = 0);
     ~KaliView();
 
     KaliSet::KaliSettings kaliSettings() const { return render_->kaliSettings(); }
@@ -74,7 +74,7 @@ private:
     QDoubleSpinBox * createDoubleSpinBox_(const QString& name, double val, double range_min, double range_max, double step, bool is_kaliset = false);
 
     ImageView * imageView_;
-    RenderThread * render_;
+    RenderPool * render_;
     QTimer * timer_;
 
     bool doKali_, doRender_, ignoreWidgets_;

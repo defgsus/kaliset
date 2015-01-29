@@ -80,6 +80,9 @@ public:
     /** Returns the average value of p */
     vec3 value3_av(const vec3& p) const;
 
+    /** Returns ray position for [-1, 1] */
+    vec3 getRayDir(double x, double y) const;
+
     /** Returns the ray color */
     vec3 trace3(const vec3& ro, const vec3& rd, Float stepSize) const;
 

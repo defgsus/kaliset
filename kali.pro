@@ -18,11 +18,11 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     kaliset.cpp \
     imageview.cpp \
-    renderthread.cpp \
-    kaliview.cpp
+    kaliview.cpp \
+    renderpool.cpp
 
 HEADERS  += mainwindow.h \
     kaliset.h \
     imageview.h \
-    renderthread.h \
-    kaliview.h
+    kaliview.h \
+    renderpool.h

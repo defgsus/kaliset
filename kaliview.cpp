@@ -10,7 +10,7 @@
 
 #include "kaliview.h"
 
-KaliView::KaliView(bool createKaliControls, bool createRenderControls, QWidget *parent)
+KaliView::KaliView(bool createKaliControls, bool createRenderControls, uint numThreads, QWidget *parent)
     : QWidget       (parent),
       doKali_       (createKaliControls),
       doRender_     (createRenderControls),
@@ -18,7 +18,7 @@ KaliView::KaliView(bool createKaliControls, bool createRenderControls, QWidget *
 {
     setObjectName("_KaliView");
 
-    render_ = new RenderThread(this);
+    render_ = new RenderPool(numThreads, this);
     connect(render_, SIGNAL(finished()), this, SLOT(updateImage_()));
 
     timer_ = new QTimer(this);
@@ -69,9 +69,9 @@ void KaliView::createWidgets_()
 
             sbScale_ = createDoubleSpinBox_(tr("scale"), render_->renderSettings().scale.x(), 0., 100000., 0.01);
 
-            sbStepMin_ = createDoubleSpinBox_(tr("min step"), render_->renderSettings().volumeMin, 0.000000001, 1000., 0.001, true);
-            sbStepMax_ = createDoubleSpinBox_(tr("max step"), render_->renderSettings().volumeMax, 0.000000001, 1000., 0.001, true);
-            sbStep_ = createDoubleSpinBox_(tr("step scale"), render_->renderSettings().volumeStep, 0.000000001, 1000., 0.01, true);
+            sbStepMin_ = createDoubleSpinBox_(tr("min step"), render_->renderSettings().volumeMin, 0.000000001, 1000., 0.001);
+            sbStepMax_ = createDoubleSpinBox_(tr("max step"), render_->renderSettings().volumeMax, 0.000000001, 1000., 0.001);
+            sbStep_ = createDoubleSpinBox_(tr("step scale"), render_->renderSettings().volumeStep, 0.000000001, 1000., 0.01);
         }
 }
 
@@ -127,21 +127,15 @@ QDoubleSpinBox * KaliView::createDoubleSpinBox_(const QString &name, double val,
 
 void KaliView::startRender()
 {
-    if (!render_->isRunning())
-    {
-        render_->start();
-        timer_->start();
-    }
+    render_->start();
+    timer_->start();
 }
 
 void KaliView::stopRender()
 {
     timer_->stop();
-    if (render_->isRunning())
-    {
-        render_->stop();
-        updateImage_();
-    }
+    render_->stop();
+    updateImage_();
 }
 
 void KaliView::setKaliSettings(const KaliSet::KaliSettings & s)

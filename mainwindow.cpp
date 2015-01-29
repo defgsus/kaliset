@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QThread>
 
 #include "mainwindow.h"
 
@@ -54,7 +55,9 @@ void MainWindow::createWidgets_()
             auto lv = new QVBoxLayout();
             lh->addLayout(lv);
 
-            auto kview = new KaliView(i == 0, true, this);
+            int numThreads = i == 2 ? QThread::idealThreadCount() : 1;
+
+            auto kview = new KaliView(i == 0, true, numThreads, this);
             kview->setObjectName(QString("_KaliView%1").arg(i+1));
             lv->addWidget(kview);
 

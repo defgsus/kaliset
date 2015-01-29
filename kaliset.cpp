@@ -75,6 +75,13 @@ KaliSet::vec3 KaliSet::value3_av(const vec3 &pos) const
     return av / kset_.numIters;
 }
 
+KaliSet::vec3 KaliSet::getRayDir(double x, double y) const
+{
+    vec3 d = vec3(x, y, 2.);
+    d.normalize();
+    return d;
+}
+
 KaliSet::vec3 KaliSet::trace3(const vec3 &ro, const vec3 &rd, Float stepSize) const
 {
     vec3 col = vec3(0,0,0);
@@ -108,7 +115,7 @@ KaliSet::vec3 KaliSet::color(int i, int j) const
             return value3( kset_.pos + vec3(x * rset_.scale.x(), y * rset_.scale.y(), 0.));
 
         case RM_VOLUME:
-            return trace3(kset_.pos, vec3(0,0,1), rset_.volumeStep);
+            return trace3(kset_.pos, getRayDir(x, y), rset_.volumeStep);
     }
 }
 
